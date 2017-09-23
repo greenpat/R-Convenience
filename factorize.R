@@ -24,7 +24,7 @@ factorize <- function(
         names(f_tb[(f_tb/sum(f_tb)) < min_freq])
     )
     
-    if(!greedy_infrequent){
+    if(!infrequent_can_include_blank_and_NA){
         infreq_set <- infreq_set[!infreq_set %in% c(NA_level, blank_level)]
     }
     
