@@ -13,11 +13,11 @@ factorize <- function(
     order = T,  # default to ordered
     reverse_order = F  # default to increasing order
 ) {
-    x <- as.factor(x)
-    if (class(x) == 'factor'){
-        # suspect this is faster than reassigning new factor object
-        levels(x) <- c(levels(x), NA_level, infrequent_level, blank_level)
+    if (class(x) != 'factor'){
+        x <- as.factor(x)
     }
+    # suspect this is faster than reassigning new factor object
+    levels(x) <- c(levels(x), NA_level, infrequent_level, blank_level)
     
     # Swap out the NA and blank categories
     x[is.na(x)] <- NA_level
@@ -39,7 +39,7 @@ factorize <- function(
     
     # Relabel all the infrequent choices
     x[x %in% infreq_set] <- infrequent_level
-
+    
     # Return the reordered factor
     reorder(droplevels(x), rep(1-(2*reverse_order),length(x)), FUN = sum, order = order)
 }
