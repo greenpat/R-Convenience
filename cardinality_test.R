@@ -6,19 +6,21 @@
 # method to derive what the true entity relationship is.
 
 cardinality_test <- function(vector_a, vector_b){
-    # Tabulate observed combinations
-    card_tb <- table(vector_a, vector_b)
     
-    # What is the greatest number of observed "A" choices for all "B" choices?
-    card_a <- max(apply(card_tb, 2, function(x) sum(x!=0)))
+    # Table of observed combinations
+    df <- unique(data.frame(
+        'a' = vector_a,
+        'b' = vector_b
+    ))
     
-    # What is the greatest number of observed "B" choices for all "A" choices?
-    card_b <- max(apply(card_tb, 1, function(x) sum(x!=0)))
+    # Most observations per single category on each side
+    a_to_b <- max(aggregate(b ~ a, df, length)$b, na.rm=T)
+    b_to_a <- max(aggregate(a ~ b, df, length)$a, na.rm=T)
     
-    # Convert to language
-    card_a <- ifelse(card_a == 1, 'One', 'Many')
-    card_b <- ifelse(card_b == 1, 'One', 'Many')
+    # Convert to text
+    a_to_b <- ifelse(a_to_b > 1, 'Many', 'One')
+    b_to_a <- ifelse(b_to_a > 1, 'Many', 'One')
     
-    # Returned value
-    paste0(card_a,':',card_b)
+    # Return
+    paste0(b_to_a,':',a_to_b)
 }
