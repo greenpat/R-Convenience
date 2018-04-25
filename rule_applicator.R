@@ -37,43 +37,60 @@ record <- df[1,]
 record[] <- c('Pita','Kale','Tofu','Bleu')
 delim = '|'
 negation = '!'
+returned_col = 'Recipe'
 
-rule_applicator(rules = rules, delim = '|', negation = '!'){
+rule_applicator(rules = rules, delim = '|', negation = '!',
+                returned_col = tail(colnames(rules),1)){
     
     # Derive which columns are shared with input (and therefore drive decisions)
-    attr(rules, 'rulecols') <- intersect(colnames(rules), colnames(record))
+    attr(rules, 'rulecols') <- setdiff(colnames(rules), returned_col)
     
-    # Generate keys to eventually report back which rule was triggered
-    #attr(rules, 'keydict') <- 
-    
-    # Row splitter utility - to transform input rules table
+    # Row splitter utility - to transform input rules_parse table
     # Equivalent to tidyr::unnest()
-    parsedf <- function(rules = rules, col_to_parse, delim = delim){
-        s = strsplit(rules[[col_to_parse]], split=paste0('\\',delim))
-        rules = rules[rep(rownames(rules), sapply(s, length)),]
-        rules[[col_to_parse]] = unlist(s)
-        rules
+    parsedf <- function(df, col_to_parse, delim){
+        s = strsplit(df[[col_to_parse]], split=paste0('\\',delim))
+        df = df[rep(rownames(df), sapply(s, length)),]
+        df[[col_to_parse]] = unlist(s)
+        df
     }
+    
+    # This table will check parsed "OR" logic
+    rules_parse <- rules
     
     # Create negation columns and parse by delimiter
     for (n in attr(rules, 'rulecols')){
         
         # Split '!' into separate column for logic
-        rules[[paste0(n,'_N')]] <- grepl(negation,rules[[n]])
-        rules[[n]] <- sub(negation,'',rules[[n]])
+        rules[[paste0(n,'_N')]] <- grepl(negation, rules[[n]])
+        rules[[n]] <- sub(negation, '', rules[[n]])
+        rules_parse[[n]] <- sub(negation, '', rules_parse[[n]])
         
         # Parse by delim (into multiple rows)
-        rules <- parsedf(rules, n, delim)
+        rules_parse <- parsedf(rules_parse, n, delim)
     }
     
-    eval_df <- rules
+    # Used to collapse rule evaluations
+    key_dict <- setNames(!grepl('\\.',rownames(rules_parse)), gsub('\\.\\d+$','',rownames(rules_parse)))
     
-    for (n in attr(rules, 'rulecols')){
-        eval_df[[paste0(n,'_O')]] <- logical(1L)
+    eval_attrib <- function(n){
+        xor(
+            ave(rules_parse[[n]]==record[[n]], names(key_dict), FUN = function(x) Reduce(`|`,x))[key_dict],
+            rules[[paste0(n,'_N')]]
+        )
     }
+    
+    eval_record <- function(record){}
+    
+    # Nested logic deserves special commentary
+    # at lowest level, ave checks "OR" against parsed out rows per rule
+    # that is wrapped in lapply to cover all columns
+    # you can then just take the top record for each rule (per ave behavior)
+    # top record indexed by key_dict
+    lapply(attr(rules, 'rulecols'), FUN = function(n) {
+        ave(rules_parse[[n]]==record[[n]], names(key_dict), FUN = function(x) Reduce(`|`,x))[key_dict]
+    })
     
     # Per record, this will return which rules were matched (OR logic)
-    record_eval_or <-
     lapply(attr(rules, 'rulecols'), FUN = function(n) {
         rules[[n]]==record[[n]]
     })
