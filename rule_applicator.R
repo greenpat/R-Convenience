@@ -45,7 +45,7 @@ rule_applicator(rules = rules, delim = '|', negation = '!',
     # Derive which columns are shared with input (and therefore drive decisions)
     attr(rules, 'rulecols') <- setdiff(colnames(rules), returned_col)
     
-    # Row splitter utility - to transform input rules_parse table
+    # Row splitter utility - to transform rules into rules_parse table
     # Equivalent to tidyr::unnest()
     parsedf <- function(df, col_to_parse, delim){
         s = strsplit(df[[col_to_parse]], split=paste0('\\',delim))
@@ -54,19 +54,16 @@ rule_applicator(rules = rules, delim = '|', negation = '!',
         df
     }
     
-    # This table will check parsed "OR" logic
-    rules_parse <- rules
+    # This table will check negation on rules
+    rules_neg <- data.frame(
+        apply(rules, 2, function(x) grepl(negation,x))
+    )
     
-    # Create negation columns and parse by delimiter
+    # This table will check "OR" logic for concatenated rules
+    rules_delim <- rules
     for (n in attr(rules, 'rulecols')){
-        
-        # Split '!' into separate column for logic
-        rules[[paste0(n,'_N')]] <- grepl(negation, rules[[n]])
-        rules[[n]] <- sub(negation, '', rules[[n]])
-        rules_parse[[n]] <- sub(negation, '', rules_parse[[n]])
-        
-        # Parse by delim (into multiple rows)
-        rules_parse <- parsedf(rules_parse, n, delim)
+        rules_delim[[n]] <- sub(negation, '', rules_delim[[n]])
+        rules_delim <- parsedf(rules_delim)
     }
     
     # Used to collapse rule evaluations
