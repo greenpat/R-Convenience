@@ -14,13 +14,14 @@ cardinality_test <- function(vector_a, vector_b){
     ))
     
     # Most observations per single category on each side
-    a_to_b <- max(aggregate(b ~ a, df, length)$b, na.rm=T)
-    b_to_a <- max(aggregate(a ~ b, df, length)$a, na.rm=T)
+    a_to_b <- max(aggregate(a ~ b, df, length)$a, na.rm=T)
+    b_to_a <- max(aggregate(b ~ a, df, length)$b, na.rm=T)
+
     
     # Convert to text
     a_to_b <- ifelse(a_to_b > 1, 'Many', 'One')
     b_to_a <- ifelse(b_to_a > 1, 'Many', 'One')
     
     # Return
-    paste0(b_to_a,':',a_to_b)
+    paste0(a_to_b,':',b_to_a)
 }
