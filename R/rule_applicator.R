@@ -18,6 +18,7 @@ rule_applicator <- function(rules = rules, delim = '|', negation = '!', wildcard
     # Equivalent to tidyr::unnest()
     parsedf <- function(df, col_to_parse, delim){
         s = strsplit(df[[col_to_parse]], split=paste0('\\',delim))
+        s[lengths(s)==0] <- ''
         df = df[rep(rownames(df), sapply(s, length)),]
         df[[col_to_parse]] = unlist(s)
         df
