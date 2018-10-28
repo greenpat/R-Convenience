@@ -4,7 +4,7 @@
 # This project is a simple 3-sided dice roller with fun graphical output
 
 # quick flash animation for all 0's or all 2's
-jackpot <- function(){
+jackpot <- function(heat){
     
     # Either red or green
     if(heat<1){jpcol<-rgb(.6,0,0)}
@@ -46,7 +46,7 @@ diceroll <- function() {
         
         # Generate plot
         plot.new()
-        if(heat==0|heat==2){jackpot()}
+        if(heat==0|heat==2){jackpot(heat)}
         text(.5,.9,paste0("[",roll,"]",collapse = " "),cex=3)
         text(.52,.38,as.character(sum(roll)), cex=20, col='gray50')  # shadow
         text(.5,.4,as.character(sum(roll)), cex=20, col=heatcol)
